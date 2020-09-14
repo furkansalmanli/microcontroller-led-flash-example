@@ -1,0 +1,56 @@
+;kesik ve sürekli çalýþma
+;=====================================================================
+                LIST        P=16F84A
+                INCLUDE    "P16F84A.INC"
+
+                CBLOCK         h'0C' // ilk adres
+SAYAC            
+SAYAC_1
+SAYI
+                ENDC
+                BSF         STATUS,5      //STATUS registerýnýn 5. bitini 1 yap yani BANK1 e geç
+                CLRF        TRISB         //TRISB'yi çýkýþ yap
+                MOVLW       H'FF'
+                MOVWF       TRISA         // PORTA YÝ GÝRÝÞ YAP
+                BCF         STATUS,5      //BANK 0 A GERÝ DÖN
+                CLRF        PORTB         //PORTB NIN BASLANGICTA TUM LEDLERI SONSUN
+                CLRF        PORTA         //PORTA NIN BASLANGICTA TUM LEDLERI SONSUN
+TEST
+	        CLRF        PORTB        //PORTB NIN BASLANGICTA TUM LEDLERI SONSUN
+                BTFSC       PORTA,0      //PORTANIN 0. PININDEKI BUTON BASILDI MI?   [BTFSC ( Bit Test F,Skip if Clear )]
+                GOTO        SUREKLI      //EÐER BU ÝÞLEM 1 ÝSE SUREKLIYE GÝT 
+                BTFSC       PORTA,1      //PORTANIN 1. PININDEKI BUTON BASILDI MI?
+                GOTO        KESIK        //1 ÝSE KESÝÐE GÝT
+                GOTO        TEST         // 0 ÝSE TESTE GÝT 
+KESIK
+                MOVLW       B'11001001'   // W YA 11001001 ATA
+		MOVWF       PORTB         // PORTB YE  11001001 A ATA ledleri yak
+                BTFSC       PORTA,1       //PORTANIN 1. PININDEKI BUTON BASILDI MI?
+                GOTO        KESIK         // HAYIR ,KESÝÐE GÝT
+                BCF         PORTB,1       //PORTB'nin 1.bitini 0 yap
+                GOTO        TEST          // TESTE GÝT 
+
+SUREKLI
+                MOVLW       B'11101101'  // W YA 11001001 ATA
+		MOVWF       PORTB        // W YU PORTB YE ATA
+                
+DUR 
+
+
+                BTFSS       PORTA,2      //PORTA NIN 2. BUTUNUNA BASILDI MI ,EÐER SONUÇ  "1" ÝSE BÝR SONRAKÝ KOMUTTAN DEVAM EDER [BTFSS ( Bit Test F,Skip if Set )]
+                GOTO        DUR          //0 SA DURA GÝT
+                CLRF        PORTB        //1 SE ledleri söndür
+                GOTO        TEST         // TESTE GÝT
+GECIKME         
+               	MOVLW          H'FF'      // SAYACA Hexadecimal 'FF' komutunu  YAZAR
+                MOVWF          SAYAC      // SAYACA  Hexadecimal'FF'  komutunu  YAZAR
+DONGU1            
+		MOVLW          H'FF'      // SAYAC_1 E   Hexadecimal 'FF'komutunu  YAZAR
+                MOVWF          SAYAC_1    // SAYAC_1 E   Hexadecimal 'FF'  komutunu YAZAR
+DONGU2
+                DECFSZ         SAYAC_1,F   //BUTONA BASILDI MI? F içeriðini 1 azaltýr,içerik 0'sa bir sonraki komuta atlar. [DECFSZ (DECrement f,Skip if Zero)] sonuç f registerýna yazýlýr
+                GOTO           DONGU2      //HAYIR YANÝ 0 SA  OZAMAN DONGU2 YE GÝT
+                DECFSZ         SAYAC,F     //BUTONA BASILDI MI?
+                GOTO           DONGU1      //HAYIR YANÝ 0 SA DONGU1 E GÝT 
+		RETURN
+                END 
